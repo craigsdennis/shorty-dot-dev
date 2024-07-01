@@ -7,13 +7,22 @@
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.4.5",
     "@cloudflare/workers-types": "^4.20240620.0",
+    "@types/common-tags": "^1.8.4",
     "typescript": "^5.4.5",
     "vitest": "1.5.0",
     "wrangler": "^3.60.3"
+  },
+  "dependencies": {
+    "@cloudflare/ai-utils": "^1.0.1",
+    "cloudflare": "^3.4.0",
+    "common-tags": "^1.8.2",
+    "fetch-event-source": "^1.0.0-alpha.2",
+    "fetch-event-stream": "^0.1.5",
+    "hono": "^4.4.8"
   }
 }

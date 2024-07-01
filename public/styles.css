@@ -1,0 +1,133 @@
+body {
+    margin: 0;
+    font-family: 'Press Start 2P', cursive;
+    background-color: #f0f0f0;
+    color: #000;
+    image-rendering: pixelated;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    width: 90vw;
+    justify-content: space-between;
+    border: 4px solid #000;
+    background-color: #e0e0e0;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border-bottom: 4px solid #000;
+}
+
+.chat-header div {
+    display: flex;
+    align-items: center;
+}
+
+.chat-header label {
+    margin-right: 5px;
+}
+
+.chat-header button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: 2px solid #000;
+    background-color: #ff6347;
+    color: #000;
+    cursor: pointer;
+}
+
+.chat-header button:hover {
+    background-color: #ff856d;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #d0d0d0;
+    border: 2px solid #000;
+}
+
+.chat-input {
+    display: flex;
+    padding: 10px;
+    border-top: 4px solid #000;
+    background-color: #fff;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #000;
+    background-color: #dcdcdc;
+    color: #000;
+}
+
+.chat-input button {
+    padding: 10px 20px;
+    border: 2px solid #000;
+    background-color: #32cd32;
+    color: #000;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.chat-input button:hover {
+    background-color: #66ff66;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 2px solid #000;
+    background-color: #cccccc;
+}
+
+.message.user {
+    align-self: flex-end;
+    background-color: #4682b4;
+    color: #fff;
+}
+
+.message.assistant {
+    align-self: flex-start;
+    background-color: #98fb98;
+    color: #000;
+}
+
+.message.tool {
+    align-self: center;
+    background-color: #ffd700;
+    color: #000;
+}
+
+/* New styles for the index.html page */
+.center-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.center-container h1 {
+    font-size: 5rem;
+    margin: 0;
+}
+
+.center-container p {
+    font-size: 1.5rem;
+    margin: 0;
+    color: #ff6347;
+}
