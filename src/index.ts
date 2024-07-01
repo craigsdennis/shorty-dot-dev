@@ -73,45 +73,6 @@ app.post('/api/report/:slug', async (c) => {
 	return c.json(results);
 });
 
-const tools = [
-	{
-		name: 'createShorty',
-		description: 'Creates a new short link',
-		parameters: {
-			type: 'object',
-			properties: {
-				slug: {
-					type: 'string',
-					description: 'The shortened part of the url.',
-				},
-				url: {
-					type: 'string',
-					description: 'The final destination where the shorty should redirect. Should start with https://',
-				},
-				override: {
-					type: 'boolean',
-					description:
-						'Will override if there is an existing shorty at that slug. Default is false. Ensure the value is lowercased for json',
-				},
-			},
-			required: ['slug', 'url'],
-		},
-	},
-	{
-		name: 'getClicksByCountryReport',
-		description: 'Returns a report of all clicks on a specific shorty grouped by country',
-		parameters: {
-			type: 'object',
-			properties: {
-				slug: {
-					type: 'string',
-					description: 'The shortened part of the url',
-				},
-			},
-		},
-	},
-];
-
 const SHORTY_SYSTEM_MESSAGE = stripIndents`
 You are an assistant for the URL Shortening service named shrty.dev.
 
