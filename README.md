@@ -8,8 +8,6 @@ It also uses the [Workers Analytics Engine](https://developers.cloudflare.com/an
 
 ## Resources
 
-https://youtu.be/MlV9Kvkh9hw
-
 [![Watch shrty.dev Admin IA on YouTube ](https://img.youtube.com/vi/MlV9Kvkh9hw/0.jpg)](https://youtu.be/MlV9Kvkh9hw)
 
 ## Setup your own
