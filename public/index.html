@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shorty</title>
-	<link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
         .center-container {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -26,6 +26,21 @@
             margin: 0;
             color: #ff6347;
         }
+
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        footer a {
+            color: #ff6347;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -35,5 +50,9 @@
             <p>partying as if it were your birthday</p>
         </div>
     </div>
+    <footer>
+        <p>built with 🧡 on the <a href="https://developer.cloudflare.com" target="_blank">Cloudflare Developer Platform</a></p>
+        <p><a href="https://github.com/craigsdennis/shorty-dot-dev" id="github-link">check out the code</a></p>
+    </footer>
 </body>
 </html>

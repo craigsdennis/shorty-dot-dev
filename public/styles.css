@@ -5,6 +5,7 @@ body {
     color: #000;
     image-rendering: pixelated;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -115,6 +116,7 @@ body {
 /* New styles for the index.html page */
 .center-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -130,4 +132,19 @@ body {
     font-size: 1.5rem;
     margin: 0;
     color: #ff6347;
+}
+
+footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+footer a {
+    color: #ff6347;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
 }
