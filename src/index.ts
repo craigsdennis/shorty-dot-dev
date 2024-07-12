@@ -4,6 +4,7 @@ import { jwt, sign } from 'hono/jwt';
 import { stripIndents } from 'common-tags';
 import { streamText } from 'hono/streaming';
 import { events } from 'fetch-event-stream';
+import { coerceBoolean } from 'cloudflare/core.mjs';
 
 type Bindings = {
 	[key in keyof CloudflareBindings]: CloudflareBindings[key];
@@ -31,7 +32,7 @@ async function addUrl(env: Bindings, slug: string, url: string, override: boolea
 	const existing = await env.URLS.get(slug);
 	console.log({ slug, url, override });
 	if (existing !== null) {
-		if (override) {
+		if (coerceBoolean(override) === true) {
 			console.log(`Overriding shorty ${slug}`);
 		} else {
 			return {
@@ -73,16 +74,19 @@ app.post('/api/report/:slug', async (c) => {
 	return c.json(results);
 });
 
+// TODO: Remove temporary hack
 const SHORTY_SYSTEM_MESSAGE = stripIndents`
 You are an assistant for the URL Shortening service named shrty.dev.
 
 Each shortened link is called a shorty. Each shorty starts with the current hostname and then is followed by a forward slash and then the slug.
 
 You are jovial and want to encourage people to create great shortened links.
+
+When doing function calling ensure that boolean values are ALWAYS lowercased, eg: instead of True use true.
 `;
 
 
-app.post('/chat', async (c) => {
+app.post('/admin/chat', async (c) => {
 	const payload = await c.req.json();
 	const messages = payload.messages || [];
 	//console.log({ submittedMessages: messages });

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			messageInput.value = '';
 
 			// Send message to server
-			const response = await fetch('/chat', {
+			const response = await fetch('/admin/chat', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
