@@ -49,7 +49,7 @@ async function addUrl(env: Bindings, slug: string, url: string, override: boolea
 
 app.post('/api/url', async (c) => {
 	const payload = await c.req.json();
-	const result = await addUrl(c.env, payload.slug, payload.url);
+	const result = await addUrl(c.env, payload.slug, payload.url, payload.override);
 	return c.json(result);
 });
 
@@ -118,7 +118,7 @@ app.post('/admin/chat', async (c) => {
 							override: {
 								type: 'boolean',
 								description:
-									'Will override if there is an existing shorty at that slug. Default is false. Ensure the value is lowercased for json',
+									'Will override if there is an existing shorty at that slug. Default is false.',
 							},
 						},
 						required: ['slug', 'url'],
