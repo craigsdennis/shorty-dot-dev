@@ -33,18 +33,23 @@ async function addUrl(env: Bindings, slug: string, url: string, override: boolea
 	console.log({ slug, url, override });
 	if (existing !== null) {
 		if (coerceBoolean(override) === true) {
-			console.log(`Overriding shorty ${slug}`);
+			console.log(`تجاوز الرابط المختصر ${slug}`);
 		} else {
 			return {
 				slug,
 				url: existing,
 				shorty: `/${slug}`,
-				message: `Did not update ${slug} because it already was pointing to ${existing} and override was set to ${override}.`,
+				message: `لم يتم تحديث ${slug} لأنه كان يشير بالفعل إلى ${existing} وتم تعيين التجاوز إلى ${override}.`,
 			};
 		}
 	}
 	await env.URLS.put(slug, url);
-	return { slug, url, shorty: `/${slug}` };
+	return { 
+		slug, 
+		url, 
+		shorty: `/${slug}`,
+		message: `تم إنشاء الرابط المختصر بنجاح!`
+	};
 }
 
 app.post('/api/url', async (c) => {
@@ -76,13 +81,15 @@ app.post('/api/report/:slug', async (c) => {
 
 // TODO: Remove temporary hack
 const SHORTY_SYSTEM_MESSAGE = stripIndents`
-You are an assistant for the URL Shortening service named shrty.dev.
+أنت مساعد ذكي لخدمة اختصار الروابط المسماة "مختصر الروابط - وقف تك".
 
-Each shortened link is called a shorty. Each shorty starts with the current hostname and then is followed by a forward slash and then the slug.
+كل رابط مختصر يُسمى "رابط مختصر". كل رابط مختصر يبدأ بنطاق الموقع الحالي ثم يتبعه شرطة مائلة ثم الاختصار.
 
-You are jovial and want to encourage people to create great shortened links.
+أنت ودود ومتحمس وتريد تشجيع الناس على إنشاء روابط مختصرة رائعة.
 
-When doing function calling ensure that boolean values are ALWAYS lowercased, eg: instead of True use true.
+عند استخدام استدعاء الدوال، تأكد أن القيم المنطقية دائماً بأحرف صغيرة، مثل: بدلاً من True استخدم true.
+
+تحدث باللغة العربية دائماً واستجب بطريقة مفيدة ومهذبة.
 `;
 
 
@@ -103,22 +110,22 @@ app.post('/admin/chat', async (c) => {
 			tools: [
 				{
 					name: 'createShorty',
-					description: 'Creates a new short link',
+					description: 'إنشاء رابط مختصر جديد',
 					parameters: {
 						type: 'object',
 						properties: {
 							slug: {
 								type: 'string',
-								description: 'The shortened part of the url.',
+								description: 'الجزء المختصر من الرابط.',
 							},
 							url: {
 								type: 'string',
-								description: 'The final destination where the shorty should redirect. Should start with https://',
+								description: 'الوجهة النهائية التي يجب أن يعيد توجيه الرابط المختصر إليها. يجب أن يبدأ بـ https://',
 							},
 							override: {
 								type: 'boolean',
 								description:
-									'Will override if there is an existing shorty at that slug. Default is false.',
+									'سيتم التجاوز إذا كان هناك رابط مختصر موجود في هذا الاختصار. الافتراضي هو false.',
 							},
 						},
 						required: ['slug', 'url'],
@@ -130,13 +137,13 @@ app.post('/admin/chat', async (c) => {
 				},
 				{
 					name: 'getClicksByCountryReport',
-					description: 'Returns a report of all clicks on a specific shorty grouped by country',
+					description: 'يُرجع تقريراً بجميع النقرات على رابط مختصر محدد مجمعة حسب البلد',
 					parameters: {
 						type: 'object',
 						properties: {
 							slug: {
 								type: 'string',
-								description: 'The shortened part of the url',
+								description: 'الجزء المختصر من الرابط',
 							},
 						},
 						required: ['slug'],

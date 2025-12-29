@@ -1,12 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shorty</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>اختصار الروابط - وقف تك</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
+        body {
+            font-family: 'Noto Sans Arabic', 'Cairo', 'Amiri', sans-serif;
+            background-color: #F0EDE5; /* Cream Base */
+            color: #3A3731; /* Warm Charcoal */
+            direction: rtl;
+        }
+
         .center-container {
             display: flex;
             flex-direction: column;
@@ -19,40 +28,55 @@
         .center-container h1 {
             font-size: 5rem;
             margin: 0;
+            color: #E8934A; /* Warm Amber */
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
         .center-container p {
-            font-size: 1.5rem;
-            margin: 0;
-            color: #ff6347;
+            font-size: 1.8rem;
+            margin: 20px 0;
+            color: #D47A5E; /* Soft Coral */
+            font-weight: 400;
         }
 
         footer {
             margin-top: 20px;
             text-align: center;
             font-size: 1rem;
+            color: #8B7A6B; /* Subtle Shadow */
         }
 
         footer a {
-            color: #ff6347;
+            color: #FA9F47; /* Bright Highlight */
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
         footer a:hover {
+            color: #E8934A; /* Warm Amber */
             text-decoration: underline;
+        }
+
+        .logo-subtitle {
+            background: linear-gradient(135deg, #F2B85C, #D47A5E); /* Golden Peach to Soft Coral */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 300;
         }
     </style>
 </head>
 <body>
     <div class="center-container">
         <div>
-            <h1>shrty</h1>
-            <p>partying as if it were your birthday</p>
+            <h1>مختصر</h1>
+            <p class="logo-subtitle">خدمة اختصار الروابط الذكية</p>
         </div>
     </div>
     <footer>
-        <p>built with 🧡 on the <a href="https://developers.cloudflare.com" target="_blank">Cloudflare Developer Platform</a></p>
-        <p><a href="https://github.com/craigsdennis/shorty-dot-dev" id="github-link">check out the code</a></p>
+        <p>تم التطوير بـ 🧡 على منصة <a href="https://developers.cloudflare.com" target="_blank">Cloudflare للمطورين</a></p>
+        <p><a href="https://github.com/WaqfTech/short-links" id="github-link">اطلع على الكود المصدري</a></p>
     </footer>
 </body>
 </html>
