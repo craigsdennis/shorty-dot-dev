@@ -1,22 +1,22 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "shrty-dot-dev"
+name = "waqftech-link-shortener"
 main = "src/index.ts"
 compatibility_date = "2024-09-28"
 compatibility_flags = ["nodejs_compat"]
+
 [assets]
 directory = "./public"
 
 routes = [
-	{ pattern = "shrty.dev", custom_domain = true }
+	{ pattern = "linkshortner.waqf.app", custom_domain = true }
 ]
-
 
 # Automatically place your workloads in an optimal location to minimize latency.
 # If you are running back-end logic in a Worker, running it closer to your back-end infrastructure
 # rather than the end user may result in better performance.
 # Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-# [placement]
-# mode = "smart"
+[placement]
+mode = "smart"
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Docs:
