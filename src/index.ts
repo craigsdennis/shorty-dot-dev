@@ -1,9 +1,6 @@
-import { runWithTools } from '@cloudflare/ai-utils';
 import { Hono } from 'hono';
 import { jwt, sign } from 'hono/jwt';
 import { stripIndents } from 'common-tags';
-import { streamText } from 'hono/streaming';
-import { events } from 'fetch-event-stream';
 import { coerceBoolean } from 'cloudflare/core.mjs';
 
 type Bindings = {
@@ -86,90 +83,207 @@ When doing function calling ensure that boolean values are ALWAYS lowercased, eg
 `;
 
 
+const TOOLS = [
+	{
+		type: 'function' as const,
+		function: {
+			name: 'createShorty',
+			description: 'Creates a new short link',
+			parameters: {
+				type: 'object',
+				properties: {
+					slug: {
+						type: 'string',
+						description: 'The shortened part of the url.',
+					},
+					url: {
+						type: 'string',
+						description: 'The final destination where the shorty should redirect. Should start with https://',
+					},
+					override: {
+						type: 'boolean',
+						description:
+							'Will override if there is an existing shorty at that slug. Default is false.',
+					},
+				},
+				required: ['slug', 'url'],
+			},
+		},
+	},
+	{
+		type: 'function' as const,
+		function: {
+			name: 'getClicksByCountryReport',
+			description: 'Returns a report of all clicks on a specific shorty grouped by country',
+			parameters: {
+				type: 'object',
+				properties: {
+					slug: {
+						type: 'string',
+						description: 'The shortened part of the url',
+					},
+				},
+				required: ['slug'],
+			},
+		},
+	},
+];
+
+async function executeToolCall(env: Bindings, name: string, args: Record<string, unknown>): Promise<string> {
+	switch (name) {
+		case 'createShorty': {
+			const result = await addUrl(env, args.slug as string, args.url as string, args.override as boolean);
+			return JSON.stringify(result);
+		}
+		case 'getClicksByCountryReport': {
+			const slug = args.slug as string;
+			const sql = stripIndents`
+				SELECT
+					blob4 as 'country',
+					COUNT() as 'total'
+				FROM
+					link_clicks
+				WHERE blob1='${slug}'
+				GROUP BY country`;
+			const result = await queryClicks(env, sql);
+			return JSON.stringify(result);
+		}
+		default:
+			return JSON.stringify({ error: `Unknown tool: ${name}` });
+	}
+}
+
+const MODEL = '@cf/zai-org/glm-4.7-flash' as keyof AiModels;
+const MAX_TOOL_ROUNDS = 5;
+
+/** Pipes an SSE ReadableStream from Workers AI into a plain-text ReadableStream, token by token. */
+function createTokenStream(source: ReadableStream): ReadableStream {
+	const inputReader = source.getReader();
+	const decoder = new TextDecoder();
+	const encoder = new TextEncoder();
+	let buffer = '';
+	let chunkCount = 0;
+	let totalWritten = 0;
+
+	return new ReadableStream({
+		async pull(controller) {
+			while (true) {
+				const { done, value } = await inputReader.read();
+				if (done) {
+					console.log(`Stream complete: ${chunkCount} raw reads, ${totalWritten} chars written`);
+					controller.close();
+					return;
+				}
+				buffer += decoder.decode(value, { stream: true });
+				if (chunkCount === 0) {
+					console.log('First raw chunk:', JSON.stringify(buffer).slice(0, 500));
+				}
+				chunkCount++;
+
+				// Process only complete lines (keep partial trailing line in buffer)
+				const lines = buffer.split('\n');
+				buffer = lines.pop() || '';
+
+				let wrote = false;
+				for (const line of lines) {
+					const trimmed = line.trim();
+					if (!trimmed.startsWith('data:')) continue;
+					const data = trimmed.slice(5).trim();
+					if (data === '[DONE]') continue;
+					try {
+						const parsed = JSON.parse(data);
+						// Support both OpenAI-compatible format and legacy Workers AI format
+						const token = parsed.choices?.[0]?.delta?.content ?? parsed.response ?? '';
+						if (token) {
+							controller.enqueue(encoder.encode(token));
+							totalWritten += token.length;
+							wrote = true;
+						}
+					} catch {
+						console.log('Failed to parse SSE chunk:', JSON.stringify(data).slice(0, 200));
+					}
+				}
+				// If we wrote at least one token, yield back so it flushes to the client
+				if (wrote) return;
+			}
+		},
+	});
+}
+
 app.post('/admin/chat', async (c) => {
 	const payload = await c.req.json();
-	const messages = payload.messages || [];
-	//console.log({ submittedMessages: messages });
+	const messages: RoleScopedChatInput[] = payload.messages || [];
+	console.log(`Chat request with ${messages.length} message(s)`);
 	messages.unshift({
 		role: 'system',
 		content: SHORTY_SYSTEM_MESSAGE,
 	});
 
-	const eventSourceStream = await runWithTools(
-		c.env.AI,
-		'@hf/nousresearch/hermes-2-pro-mistral-7b',
-		{
+	// Tool calling loop: let the model call tools until it produces a final text response
+	for (let i = 0; i < MAX_TOOL_ROUNDS; i++) {
+		console.log(`Tool round ${i + 1}/${MAX_TOOL_ROUNDS}`);
+		const response = await c.env.AI.run(MODEL, {
 			messages,
-			tools: [
-				{
-					name: 'createShorty',
-					description: 'Creates a new short link',
-					parameters: {
-						type: 'object',
-						properties: {
-							slug: {
-								type: 'string',
-								description: 'The shortened part of the url.',
-							},
-							url: {
-								type: 'string',
-								description: 'The final destination where the shorty should redirect. Should start with https://',
-							},
-							override: {
-								type: 'boolean',
-								description:
-									'Will override if there is an existing shorty at that slug. Default is false.',
-							},
-						},
-						required: ['slug', 'url'],
-					},
-					function: async ({ slug, url, override }) => {
-						const result = await addUrl(c.env, slug, url, override);
-						return JSON.stringify(result);
-					},
-				},
-				{
-					name: 'getClicksByCountryReport',
-					description: 'Returns a report of all clicks on a specific shorty grouped by country',
-					parameters: {
-						type: 'object',
-						properties: {
-							slug: {
-								type: 'string',
-								description: 'The shortened part of the url',
-							},
-						},
-						required: ['slug'],
-					},
-					function: async ({ slug }) => {
-						const sql = stripIndents`
-							SELECT
-								blob4 as 'country',
-								COUNT() as 'total'
-							FROM
-								link_clicks
-							WHERE blob1='${slug}'
-							GROUP BY country`;
-						const result = await queryClicks(c.env, sql);
-						return JSON.stringify(result);
-					},
-				},
-			],
-		},
-		{
-			streamFinalResponse: true,
-			verbose: true,
-		}
-	);
+			tools: TOOLS,
+		});
+		console.log('AI response:', JSON.stringify(response).slice(0, 500));
 
-	return streamText(c, async (stream) => {
-		const chunks = events(new Response(eventSourceStream as ReadableStream));
-		for await (const chunk of chunks) {
-			if (chunk.data && chunk.data !== '[DONE]' && chunk.data !== '<|im_end|>') {
-				const data = JSON.parse(chunk.data);
-				stream.write(data.response);
+		// Extract tool calls from either legacy or OpenAI-compatible format
+		const legacyToolCalls = (response as any).tool_calls;
+		const oaiChoice = (response as any).choices?.[0];
+		const oaiToolCalls = oaiChoice?.message?.tool_calls;
+		const toolCalls = oaiToolCalls || legacyToolCalls;
+
+		if (toolCalls && toolCalls.length > 0) {
+			console.log(`Model requested ${toolCalls.length} tool call(s):`, JSON.stringify(toolCalls).slice(0, 500));
+
+			// Add the assistant's tool call message
+			messages.push({
+				role: 'assistant',
+				content: '',
+				tool_calls: toolCalls.map((tc: any) => ({
+					id: tc.id || crypto.randomUUID(),
+					type: 'function',
+					function: tc.function || { name: tc.name, arguments: typeof tc.arguments === 'string' ? tc.arguments : JSON.stringify(tc.arguments) },
+				})),
+			} as unknown as RoleScopedChatInput);
+
+			// Execute each tool call and add results
+			for (const tc of toolCalls) {
+				// Normalize: OpenAI format has tc.function.name/arguments, legacy has tc.name/arguments
+				const name = tc.function?.name || tc.name;
+				const rawArgs = tc.function?.arguments ?? tc.arguments;
+				const args = typeof rawArgs === 'string' ? JSON.parse(rawArgs) : rawArgs;
+				const toolCallId = tc.id || crypto.randomUUID();
+
+				console.log(`Executing tool: ${name}`, args);
+				const result = await executeToolCall(c.env, name, args);
+				console.log(`Tool result: ${result.slice(0, 200)}`);
+				messages.push({
+					role: 'tool',
+					tool_call_id: toolCallId,
+					content: result,
+				} as unknown as RoleScopedChatInput);
 			}
+			continue;
 		}
+
+		// No tool calls — the model has a final answer. Log what we got, then stream it.
+		const textContent = oaiChoice?.message?.content || (response as any).response;
+		console.log('No tool calls detected. Text content preview:', (textContent || '(none)').slice(0, 200));
+		console.log('Streaming final response');
+		break;
+	}
+
+	// Stream the final response
+	const stream = await c.env.AI.run(MODEL, {
+		messages,
+		stream: true,
+	});
+	console.log('Stream obtained, type:', typeof stream);
+
+	return new Response(createTokenStream(stream as ReadableStream), {
+		headers: { 'Content-Type': 'text/plain; charset=utf-8' },
 	});
 });
 
