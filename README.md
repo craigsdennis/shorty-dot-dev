@@ -1,47 +1,59 @@
 # shrty.dev
 
-This is a #BuildInPublic project of a URL Shortening service built on the [Cloudflare Developer Platform](https://developers.cloudflare.com).
+A #BuildInPublic URL shortening service built on the [Cloudflare Developer Platform](https://developers.cloudflare.com).
 
-It makes use of the Key Value service [KV](https://developers.cloudflare.com/kv) to store the shorty and the URL.
+## What it uses
 
-It also uses the [Workers Analytics Engine](https://developers.cloudflare.com/analytics/analytics-engine/) to track and report on usage.
+- [Workers](https://developers.cloudflare.com/workers/) — Runtime
+- [Hono](https://hono.dev/) — Web framework
+- [KV](https://developers.cloudflare.com/kv/) — Stores slug-to-URL mappings
+- [Workers Analytics Engine](https://developers.cloudflare.com/analytics/analytics-engine/) — Tracks and reports on click events with geo metadata
+- [Workers AI](https://developers.cloudflare.com/workers-ai/) — Powers the admin chat interface (`@cf/zai-org/glm-4.7-flash`) with tool calling
+
+## Admin
+
+- `/admin/` — Chat interface for managing shorties via natural language (create links, query analytics)
+- `/admin/analytics.html` — Dashboard showing click counts per slug over the past 3 months
 
 ## Resources
 
-[![Watch shrty.dev Admin IA on YouTube ](https://img.youtube.com/vi/MlV9Kvkh9hw/0.jpg)](https://youtu.be/MlV9Kvkh9hw)
+[![Watch shrty.dev Admin AI on YouTube](https://img.youtube.com/vi/MlV9Kvkh9hw/0.jpg)](https://youtu.be/MlV9Kvkh9hw)
 
 ## Setup your own
 
-### Setup
+### Prerequisites
 
-Build a new KV service for yourself to track the URLs
+Create a KV namespace for URL storage:
 
 ```bash
-npx wrangler kv:namespace create URLS
+npx wrangler kv namespace create URLS
 ```
 
-Replace wrangler.toml settings for the KV section
+Update the `kv_namespaces` id in `wrangler.jsonc` with the returned namespace ID.
 
-Create a new [Workers Analytics Engine API token](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)
+Create a [Workers Analytics Engine API token](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/) with read access.
 
-Copy the [.dev.vars.example](./.dev.vars.example) to `.dev.vars` (for local development)
-
-Regenerate types
+Copy `.dev.vars.example` to `.dev.vars` and fill in the values:
 
 ```bash
-npx wrangler cf-typegen
+cp .dev.vars.example .dev.vars
 ```
 
-## Develop
+Generate types:
 
 ```bash
+npm run cf-typegen
+```
+
+### Development
+
+```bash
+npm install
 npm run dev
 ```
 
-## Deploy
+### Deployment
 
 ```bash
 npm run deploy
 ```
-
-
