@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shorty Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .analytics-container {
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            width: 90vw;
+            border: 4px solid #000;
+            background-color: #e0e0e0;
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px;
+            border-bottom: 4px solid #000;
+        }
+
+        .analytics-header a {
+            padding: 5px 10px;
+            border: 2px solid #000;
+            background-color: #ff6347;
+            color: #000;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+        }
+
+        .analytics-header a:hover {
+            background-color: #ff856d;
+        }
+
+        .analytics-body {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #d0d0d0;
+            border: 2px solid #000;
+        }
+
+        .analytics-body table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .analytics-body th,
+        .analytics-body td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 2px solid #000;
+        }
+
+        .analytics-body th {
+            background-color: #4682b4;
+            color: #fff;
+        }
+
+        .analytics-body tr:nth-child(even) {
+            background-color: #c0c0c0;
+        }
+
+        .analytics-body tr:nth-child(odd) {
+            background-color: #d0d0d0;
+        }
+
+        .analytics-body td.count {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .analytics-body th.count {
+            text-align: right;
+        }
+
+        .analytics-body td.slug a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .analytics-body td.slug a:hover {
+            text-decoration: underline;
+            color: #ff6347;
+        }
+
+        .analytics-info {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #000;
+            background-color: #98fb98;
+            font-size: 0.6rem;
+            line-height: 1.8;
+        }
+
+        .analytics-info a {
+            color: #4682b4;
+            text-decoration: none;
+        }
+
+        .analytics-info a:hover {
+            text-decoration: underline;
+        }
+
+        #loading {
+            padding: 20px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        #error {
+            padding: 20px;
+            text-align: center;
+            color: #ff6347;
+            font-size: 0.8rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="analytics-container">
+        <div class="analytics-header">
+            <h1>shrty Analytics</h1>
+            <div>
+                <a href="/admin/">Chat</a>
+            </div>
+        </div>
+        <div class="analytics-body">
+            <div class="analytics-info">
+                Powered by <a href="https://developers.cloudflare.com/analytics/analytics-engine/" target="_blank">Workers Analytics Engine</a>. Showing the past 3 months of data.
+            </div>
+            <div id="loading">Loading...</div>
+            <div id="error"></div>
+            <table id="analytics-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Slug</th>
+                        <th class="count">Clicks</th>
+                    </tr>
+                </thead>
+                <tbody id="analytics-body"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const table = document.getElementById('analytics-table');
+            const tbody = document.getElementById('analytics-body');
+
+            try {
+                const response = await fetch('/admin/api/analytics');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (!data || data.length === 0) {
+                    error.textContent = 'No click data found for the last 3 months.';
+                    error.style.display = 'block';
+                    return;
+                }
+
+                table.style.display = 'table';
+                for (const row of data) {
+                    const tr = document.createElement('tr');
+                    const slugTd = document.createElement('td');
+                    slugTd.classList.add('slug');
+                    const link = document.createElement('a');
+                    link.href = '/' + row.slug;
+                    link.target = '_blank';
+                    link.textContent = '/' + row.slug;
+                    slugTd.appendChild(link);
+                    tr.appendChild(slugTd);
+
+                    const countTd = document.createElement('td');
+                    countTd.classList.add('count');
+                    countTd.textContent = Number(row.count).toLocaleString();
+                    tr.appendChild(countTd);
+
+                    tbody.appendChild(tr);
+                }
+            } catch (e) {
+                loading.style.display = 'none';
+                error.textContent = 'Failed to load analytics: ' + e.message;
+                error.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

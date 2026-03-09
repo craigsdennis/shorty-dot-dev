@@ -71,6 +71,19 @@ app.post('/api/report/:slug', async (c) => {
 	return c.json(results);
 });
 
+app.get('/admin/api/analytics', async (c) => {
+	const sql = stripIndents`
+		SELECT
+			blob1 as slug,
+			COUNT() as count
+		FROM link_clicks
+		WHERE timestamp >= NOW() - INTERVAL '90' DAY
+		GROUP BY slug
+		ORDER BY count DESC`;
+	const results = await queryClicks(c.env, sql);
+	return c.json(results || []);
+});
+
 // TODO: Remove temporary hack
 const SHORTY_SYSTEM_MESSAGE = stripIndents`
 You are an assistant for the URL Shortening service named shrty.dev.
